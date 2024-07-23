@@ -1,0 +1,19 @@
+{
+  "name": "decitizen",
+  "version": "0.0.1",
+  "description": "A way to verify Kenyan citizens using ecitizen",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "debug": "tsc && node ./dist/index.js"
+  },
+  "author": "brian.orwe",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^20.14.11",
+    "@types/ws": "^8.5.11",
+    "node-fetch": "^3.3.2",
+    "node-html-parser": "^6.1.13",
+    "typescript": "^5.5.4",
+    "ws": "^8.18.0"
+  }
+}
