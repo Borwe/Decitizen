@@ -74,6 +74,7 @@ export class Validator {
           if(tag.tag && tag.tag === "existing_acc_error"){
             //means this is an existing account, so success
             resolve(true)
+            return
           }
         }
         resolve(false)
@@ -85,7 +86,7 @@ export class Validator {
       this.responseposts.push(data)
     }
 
-    if(this.responseposts.length == 2){
+    if(this.stage === "Result" && this.responseposts.length == 2){
       const second = this.responseposts[1]
       if(second[3] === "diff"){
         const diffForSecond = second[4]
@@ -100,7 +101,7 @@ export class Validator {
       this.responseposts = []
       return;
     }
-    console.log("Recieved Data:", JSON.stringify(data), "\n")
+    //console.log("Recieved Data:", JSON.stringify(data), "\n")
   }
 
   async begin(): Promise<boolean>{
@@ -113,10 +114,10 @@ export class Validator {
     })
 
     const cookies = response.headers.get("Set-Cookie")!
-    const static_files = ["https://accounts.ecitizen.go.ke/en/images/favicon.ico",
-      "https://accounts.ecitizen.go.ke/en/assets/app.css",
-      "https://accounts.ecitizen.go.ke/en/assets/app.js"]
-    static_files.forEach(async f=> await fetch(f,{agent: this.agent}))
+    //const static_files = ["https://accounts.ecitizen.go.ke/en/images/favicon.ico",
+     // "https://accounts.ecitizen.go.ke/en/assets/app.css",
+     // "https://accounts.ecitizen.go.ke/en/assets/app.js"]
+    //static_files.forEach(async f=> await fetch(f,{agent: this.agent}))
 
     const html = await response.text()
     const html_elements = HTMLParser.parse(html)
@@ -127,6 +128,14 @@ export class Validator {
     return new Promise((resolve, reject)=>{
       this.openWebSocketStream(resolve,reject)
     })
+  }
+
+  /**
+  * Only call after begin()
+  */
+  end(){
+    this.ws!.close()
+    this.ws = undefined
   }
 
   private setupWebSocket(cookies: string){
@@ -153,11 +162,9 @@ export class Validator {
     })
 
     this.ws!.on("close",()=>{
-      if(this.stage != "Result"){
+      if(this.stage !== "Result"){
         reject("Closed before completion")
-        return
       }
-      reject("Closed with result")
     })
   }
 
