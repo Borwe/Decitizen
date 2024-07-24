@@ -19,6 +19,7 @@ export class Validator {
   phx_static: string | undefined 
   ws: WebSocket | undefined
   stage: Stages = "Start"
+  responseposts: Array<Array<any>> = []
 
   constructor(public name: string, public id: string, public year: string){}
 
@@ -78,8 +79,28 @@ export class Validator {
         resolve(false)
         return
       }
-      console.log("Recieved Data:", JSON.stringify(e))
+      this.responseposts.push(diff)
+      return
+    }else if(this.stage === "Result" && data[0]=== "4"){
+      this.responseposts.push(data)
     }
+
+    if(this.responseposts.length == 2){
+      const second = this.responseposts[1]
+      if(second[3] === "diff"){
+        const diffForSecond = second[4]
+        const tag = diffForSecond.e[0][1]
+        if(tag && tag.tag === "error_message_0"){
+          //meaning ID, Name, or Year of birth didn't match
+          resolve(false)
+        }
+      }
+
+      //clear
+      this.responseposts = []
+      return;
+    }
+    console.log("Recieved Data:", JSON.stringify(data), "\n")
   }
 
   async begin(): Promise<boolean>{

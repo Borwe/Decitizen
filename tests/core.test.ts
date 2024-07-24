@@ -20,4 +20,23 @@ describe("core tests",()=>{
       })
     expect(result).toBeTruthy()
   }, 9999999)
+
+  it("Validator User With Bad Name", async ()=>{
+    const name = process.env.BADNAME
+    const year = process.env.BADNAMEYEAR
+    const id = process.env.BADWORKID
+    expect(name).toBeTruthy()
+    expect(year).toBeTruthy()
+    expect(id).toBeTruthy()
+
+    let failed = false
+    const result = await new Validator(name!, id!, year!,)
+      .begin().catch(reject=>{
+        failed = true
+        console.log(reject)
+        return false
+      })
+    expect(failed).toBeFalsy()
+    expect(result).toBeFalsy()
+  }, 9999999)
 })
