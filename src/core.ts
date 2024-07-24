@@ -38,7 +38,7 @@ export class Validator {
       {"type":"form","event":"validate_id","value":`validate_id%5Bid_number%5D=${this.id}&validate_id%5Bfirst_name%5D=${this.name}`}]	
   }
 
-  private stepingWork(rawData: RawData){
+  private stepingWork(rawData: RawData, resolve: (value: boolean)=>void){
     const data: any[] = JSON.parse(rawData.toString())
     const current_start_in_message: string|null = data[1]
     //console.log("Recieved Data:", data[0], current_start_in_message)
@@ -61,8 +61,25 @@ export class Validator {
       this.stage = "Result"
       this.ws!.send(JSON.stringify(to_send))
       return
+    }else if(this.stage === "Result" && current_start_in_message === "7"){
+      const diff = data[4].response.diff
+      const e = diff.e
+      if(e){
+        //if `e` exists, then we have an error message inside the current data
+        //message
+        const focus_array = e[0]
+        if(focus_array[0] === "focus_error"){
+          const tag = focus_array[1]
+          if(tag.tag && tag.tag === "existing_acc_error"){
+            //means this is an existing account, so success
+            resolve(true)
+          }
+        }
+        resolve(false)
+        return
+      }
+      console.log("Recieved Data:", JSON.stringify(e))
     }
-    console.log("Recieved Data:", rawData.toString())
   }
 
   async begin(): Promise<boolean>{
@@ -111,7 +128,7 @@ export class Validator {
     })
 
     this.ws!.on("message",(data)=>{
-      this.stepingWork(data)
+      this.stepingWork(data, resolve)
     })
 
     this.ws!.on("close",()=>{
