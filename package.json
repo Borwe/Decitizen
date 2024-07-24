@@ -4,7 +4,8 @@
   "description": "A way to verify Kenyan citizens using ecitizen",
   "main": "dist/src/index.js",
   "scripts": {
-    "debug": "tsc && node ./dist/index.js"
+    "debug": "tsc && node ./dist/index.js",
+    "test": "jest"
   },
   "author": "brian.orwe",
   "license": "MIT",
