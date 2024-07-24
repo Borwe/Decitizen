@@ -1,9 +1,10 @@
-import { describe, expect, it } from "@jest/globals"
+import { beforeEach, describe, expect, it } from "@jest/globals"
 import dotenv from "dotenv"
 import { Validator } from "../src/core"
 
 describe("core tests",()=>{
-  dotenv.config()
+
+  const result = dotenv.config()
 
   it("Validator User Correct", async ()=>{
     const name = process.env.WORKNAME
@@ -14,10 +15,7 @@ describe("core tests",()=>{
     expect(id).toBeTruthy()
 
     const validator = new Validator(name!, id!, year!)
-    const result = await validator.begin().catch(reject=>{
-        console.log(reject)
-        return false
-      })
+    const result = await validator.begin()
     expect(result).toBeTruthy()
     validator.end()
   }, 9999999)
@@ -34,8 +32,7 @@ describe("core tests",()=>{
     const validator = new Validator(name!, id!, year!)
     const result = await validator.begin().catch(reject=>{
         failed = true
-        console.log(reject)
-        return false
+      return undefined
       })
     expect(failed).toBeFalsy()
     expect(result).toBeFalsy()
@@ -55,7 +52,6 @@ describe("core tests",()=>{
     const validator = new Validator(name!, id!, year!)
     const result = await validator.begin().catch(reject=>{
         failed = true
-        console.log(reject)
         return false
       })
     expect(failed).toBeFalsy()
@@ -76,7 +72,6 @@ describe("core tests",()=>{
     const validator = new Validator(name!, id!, year!)
     const result = await validator.begin().catch(reject=>{
         failed = true
-        console.log(reject)
         return false
       })
     expect(failed).toBeFalsy()

@@ -1,6 +1,5 @@
 import HTMLParser from "node-html-parser"
 import { WebSocket, RawData } from "ws"
-import https from "https"
 
 type HTMLElement = ReturnType<typeof HTMLParser.parse>
 
@@ -11,7 +10,6 @@ const URL_ID_VALIDATION = "https://accounts.ecitizen.go.ke/en/register/citizen/v
 type Stages = "Start" | "TextFields" | "YearDropDown" | "Result"
 
 export class Validator {
-  agent = new https.Agent({ keepAlive: true})
   start = 4
   crf_token: string | undefined
   lv_connection_id: string | undefined  
@@ -105,12 +103,10 @@ export class Validator {
   }
 
   async begin(): Promise<boolean>{
-    const {default: fetch} = await import('node-fetch');
     const response = await fetch(URL_ID_VALIDATION, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0"
       },
-      agent: this.agent
     })
 
     const cookies = response.headers.get("Set-Cookie")!
@@ -145,7 +141,6 @@ export class Validator {
       headers: {
         cookie: cookies
       },
-      agent: this.agent
     })
   }
 
