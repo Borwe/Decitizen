@@ -25,7 +25,7 @@ And the payload must have the json structure as bellow:
 - All fields are strings
 
 Possible Replies from the server are in the form:
-```json
+```
 {
 success: boolean
 message: string
