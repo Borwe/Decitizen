@@ -9,6 +9,12 @@ const URL_ID_VALIDATION = "https://accounts.ecitizen.go.ke/en/register/citizen/v
 
 type Stages = "Start" | "TextFields" | "YearDropDown" | "Result"
 
+export type Input = {
+  id?: string,
+  name?: string,
+  year?: string
+}
+
 export class Validator {
   start = 4
   crf_token: string | undefined

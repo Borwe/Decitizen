@@ -5,21 +5,25 @@
   "main": "dist/src/index.js",
   "scripts": {
     "server": "tsc && node ./dist/src/index.js",
+    "debug-server": "ts-node ./src/index.ts",
     "test": "jest"
   },
   "author": "brian.orwe",
   "license": "MIT",
   "dependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^20.14.11",
     "@types/ws": "^8.5.11",
+    "express": "^4.19.2",
     "node-html-parser": "^6.1.13",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "dotenv": "^16.4.5",
     "@jest/globals": "^29.7.0",
     "jest": "^29.2.3",
     "ts-jest": "^29.2.3",
+    "ts-node": "^10.9.2",
     "typecript": "^0.0.1-security",
     "typescript": "^5.5.4"
   }
