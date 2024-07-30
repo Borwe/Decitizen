@@ -1,10 +1,21 @@
-import { beforeEach, describe, expect, it } from "@jest/globals"
+import { beforeAll, beforeEach, describe, expect, it } from "@jest/globals"
 import dotenv from "dotenv"
 import { Validator } from "../src/core"
 
 describe("core tests",()=>{
 
-  const result = dotenv.config()
+  let validator = new Validator()
+
+  beforeEach(async ()=>{
+    dotenv.config()
+    //add a delay of 3 seconds
+    await new Promise((resolve,_)=>{
+      setTimeout(()=>{
+        resolve(true)
+      }, 3000)
+    })
+  })
+
 
   it("Validator User Correct", async ()=>{
     const name = process.env.WORKNAME
@@ -14,9 +25,8 @@ describe("core tests",()=>{
     expect(year).toBeTruthy()
     expect(id).toBeTruthy()
 
-    const validator = new Validator(name!, id!, year!)
-    const result = await validator.begin()
-    expect(result).toBeTruthy()
+    const result = await validator.validate({name, id, year})
+    expect(result).toBe(true)
     validator.end()
   }, 9999999)
 
@@ -28,14 +38,8 @@ describe("core tests",()=>{
     expect(year).toBeTruthy()
     expect(id).toBeTruthy()
 
-    let failed = false
-    const validator = new Validator(name!, id!, year!)
-    const result = await validator.begin().catch(reject=>{
-        failed = true
-      return undefined
-      })
-    expect(failed).toBeFalsy()
-    expect(result).toBeFalsy()
+    const result = await validator.validate({name, id, year})
+    expect(result).toBe(false)
     validator.end()
   }, 9999999)
 
@@ -48,14 +52,8 @@ describe("core tests",()=>{
     expect(year).toBeTruthy()
     expect(id).toBeTruthy()
 
-    let failed = false
-    const validator = new Validator(name!, id!, year!)
-    const result = await validator.begin().catch(reject=>{
-        failed = true
-        return false
-      })
-    expect(failed).toBeFalsy()
-    expect(result).toBeFalsy()
+    const result =await  validator.validate({name, id, year})
+    expect(result).toBe(false)
     validator.end()
   }, 9999999)
 
@@ -68,14 +66,8 @@ describe("core tests",()=>{
     expect(year).toBeTruthy()
     expect(id).toBeTruthy()
 
-    let failed = false
-    const validator = new Validator(name!, id!, year!)
-    const result = await validator.begin().catch(reject=>{
-        failed = true
-        return false
-      })
-    expect(failed).toBeFalsy()
-    expect(result).toBeFalsy()
+    const result = await  validator.validate({name, id, year})
+    expect(result).toBe(false)
     validator.end()
   }, 9999999)
 })

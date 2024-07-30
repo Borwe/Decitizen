@@ -5,7 +5,7 @@ type HTMLElement = ReturnType<typeof HTMLParser.parse>
 
 const SELECT = "[data-phx-session]:not([data-phx-parent-id])"
 
-const URL_ID_VALIDATION = "https://accounts.ecitizen.go.ke/en/register/citizen/validate-id"
+export const URL_ID_VALIDATION = "https://accounts.ecitizen.go.ke/en/register/citizen/validate-id"
 
 type Stages = "Start" | "TextFields" | "YearDropDown" | "Result"
 
@@ -23,46 +23,68 @@ export class Validator {
   phx_static: string | undefined 
   ws: WebSocket | undefined
   stage: Stages = "Start"
-  responseposts: Array<Array<any>> = []
+  responseposts: Array<Array<any>> = [];
+  asyncGenerator: AsyncGenerator<boolean | Input | string | undefined, void, Input | undefined> | undefined
 
-  constructor(public name: string, public id: string, public year: string){}
+  async validate(input: Input): Promise<boolean | string>{
+    if(this.asyncGenerator === undefined){
+      this.asyncGenerator = this.generator()
+    }
 
-  private phxFillTexfields(): any[]{
+    await this.asyncGenerator.next()
+    let result = (await this.asyncGenerator.next(input)).value
+    console.log("RESULT1:",result)
+
+    return result as boolean
+  }
+  
+  async *generator(){
+    let value: Input | undefined;
+    while(true){
+      value = yield value
+      console.log("RECIEVED:",value)
+      const result =  await this.begin(value!)
+      console.log("RESULTD:",result)
+      yield result
+    }
+  }
+  
+  private phxFillTexfields(id: string, name:string): any[]{
     return ["4",""+this.start,`lv:${this.lv_connection_id}`,"event",
       {"type":"form","event":"validate",
-        "value":`validate_id%5Bid_number%5D=${this.id}&validate_id%5Bfirst_name%5D=${this.name}&_target=validate_id%5Bfirst_name%5D`,"uploads":{}}]	
+        "value":`validate_id%5Bid_number%5D=${id}&validate_id%5Bfirst_name%5D=${name}&_target=validate_id%5Bfirst_name%5D`,"uploads":{}}]	
   }
 
-  private phxDropDownHook(): any[]{
+  private phxDropDownHook(year: string): any[]{
     return ["4",""+this.start,`lv:${this.lv_connection_id}`,"event",
-      {"type":"hook","event":"combo_value","value":{"source":"year_of_birth","selected":this.year}}]	
+      {"type":"hook","event":"combo_value","value":{"source":"year_of_birth","selected":year}}]	
   }
 
-  private phxSubmit(): any[]{
+  private phxSubmit(id: string, name:string): any[]{
     return ["4",""+this.start,`lv:${this.lv_connection_id}`,"event",
-      {"type":"form","event":"validate_id","value":`validate_id%5Bid_number%5D=${this.id}&validate_id%5Bfirst_name%5D=${this.name}`}]	
+      {"type":"form","event":"validate_id","value":`validate_id%5Bid_number%5D=${id}&validate_id%5Bfirst_name%5D=${name}`}]	
   }
 
-  private stepingWork(rawData: RawData, resolve: (value: boolean)=>void){
+  private stepingWork(rawData: RawData, resolve: (value: boolean)=>void, input: Input){
     const data: any[] = JSON.parse(rawData.toString())
     const current_start_in_message: string|null = data[1]
     //console.log("Recieved Data:", data[0], current_start_in_message)
     if(this.stage === "Start" && current_start_in_message === "4"){
       //means we just opened the socket and did a phx_join
       this.start+=1;
-      const to_send = this.phxFillTexfields()
+      const to_send = this.phxFillTexfields(input.id!, input.name!)
       this.stage = "TextFields"
       this.ws!.send(JSON.stringify(to_send))
       return
     }else if(this.stage === "TextFields" && current_start_in_message === "5"){
       this.start+=1
-      const to_send = this.phxDropDownHook()
+      const to_send = this.phxDropDownHook(input.year!)
       this.stage = "YearDropDown"
       this.ws!.send(JSON.stringify(to_send))
       return
     }else if(this.stage === "YearDropDown" && current_start_in_message === "6"){
       this.start+=1
-      const to_send = this.phxSubmit()
+      const to_send = this.phxSubmit(input.id!, input.name!)
       this.stage = "Result"
       this.ws!.send(JSON.stringify(to_send))
       return
@@ -108,18 +130,18 @@ export class Validator {
     //console.log("Recieved Data:", JSON.stringify(data), "\n")
   }
 
-  async begin(): Promise<boolean>{
+  async begin(input: Input): Promise<boolean>{
+    this.start = 4
+    this.stage = "Start"
     const response = await fetch(URL_ID_VALIDATION, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0"
       },
-    })
+    }).catch(_=>{
+        throw new Error("Failed to fetch: "+JSON.toString())
+      })
 
     const cookies = response.headers.get("Set-Cookie")!
-    //const static_files = ["https://accounts.ecitizen.go.ke/en/images/favicon.ico",
-     // "https://accounts.ecitizen.go.ke/en/assets/app.css",
-     // "https://accounts.ecitizen.go.ke/en/assets/app.js"]
-    //static_files.forEach(async f=> await fetch(f,{agent: this.agent}))
 
     const html = await response.text()
     const html_elements = HTMLParser.parse(html)
@@ -128,7 +150,7 @@ export class Validator {
     this.setupWebSocket(cookies)
 
     return new Promise((resolve, reject)=>{
-      this.openWebSocketStream(resolve,reject)
+      this.openWebSocketStream(resolve,reject, input)
     })
   }
 
@@ -151,7 +173,7 @@ export class Validator {
   }
 
   private openWebSocketStream(resolve: (value: boolean)=>void,
-    reject: (value: string)=>void){
+    reject: (value: string)=>void, input: Input){
 
     this.ws!.on("open", ()=>{
       const data = JSON.stringify(this.phxJoinArray())
@@ -159,7 +181,7 @@ export class Validator {
     })
 
     this.ws!.on("message",(data)=>{
-      this.stepingWork(data, resolve)
+      this.stepingWork(data, resolve, input)
     })
 
     this.ws!.on("close",()=>{
