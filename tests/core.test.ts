@@ -27,7 +27,6 @@ describe("core tests",()=>{
 
     const result = await validator.validate({name, id, year})
     expect(result).toBe(true)
-    validator.end()
   }, 9999999)
 
   it("Validator User With Bad Name", async ()=>{
@@ -40,7 +39,6 @@ describe("core tests",()=>{
 
     const result = await validator.validate({name, id, year})
     expect(result).toBe(false)
-    validator.end()
   }, 9999999)
 
 
@@ -54,7 +52,6 @@ describe("core tests",()=>{
 
     const result =await  validator.validate({name, id, year})
     expect(result).toBe(false)
-    validator.end()
   }, 9999999)
 
 
@@ -68,6 +65,17 @@ describe("core tests",()=>{
 
     const result = await  validator.validate({name, id, year})
     expect(result).toBe(false)
-    validator.end()
   }, 9999999)
+
+  it("Validator User Correct Again", async ()=>{
+    const name = process.env.WORKNAME
+    const year = process.env.WORKYEAR
+    const id = process.env.WORKID
+    expect(name).toBeTruthy()
+    expect(year).toBeTruthy()
+    expect(id).toBeTruthy()
+
+    const result = await validator.validate({name, id, year})
+    expect(result).toBe(true)
+  }, 9999999)  
 })
