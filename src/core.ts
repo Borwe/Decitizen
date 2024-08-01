@@ -33,7 +33,7 @@ export class Validator {
 
     await this.asyncGenerator.next()
     let result = (await this.asyncGenerator.next(input)).value
-    console.log("RESULT1:", result)
+    //console.log("RESULT1:", result)
 
     return result as boolean
   }
@@ -42,9 +42,9 @@ export class Validator {
     let value: Input | undefined;
     while (true) {
       value = yield value
-      console.log("RECIEVED:", value)
+      //console.log("RECIEVED:", value)
       const result = await this.begin(value!)
-      console.log("RESULTD:", result)
+      //console.log("RESULTD:", result)
       yield result
     }
   }
@@ -78,7 +78,7 @@ export class Validator {
     }
     if (this.stage === "Start") {
       //means we just opened the socket and did a phx_join
-      console.log("STARTING")
+      //console.log("STARTING")
       this.start += 1;
       const to_send = this.phxFillTexfields(input.id!, input.name!)
       this.stage = "TextFields"
@@ -96,7 +96,7 @@ export class Validator {
       this.ws!.send(JSON.stringify(to_send))
       return
     } else if (this.stage === "Result") {
-      console.log("RESULT Recieved Data:", JSON.stringify(data), "\n")
+      //console.log("RESULT Recieved Data:", JSON.stringify(data), "\n")
       if (data[4].response) {
         const diff = data[4].response.diff || undefined
         if (diff.e) {
@@ -109,7 +109,7 @@ export class Validator {
             if (tag.tag && tag.tag === "existing_acc_error") {
               //means this is an existing account, so success
               resolve(true)
-              console.log("JESUS")
+              //console.log("JESUS")
               return
             } else {
               resolve(false)
@@ -125,14 +125,14 @@ export class Validator {
     }
     if (this.stage === "Result" && this.responseposts.length > 1) {
       const second = this.responseposts[this.responseposts.length -1]
-      console.log("SECOND:",second)
+      //console.log("SECOND:",second)
       if (second[3] === "diff") {
-        console.log("HMMMMMMMMMMMMMMMMMMMMMMMM")
+        //console.log("HMMMMMMMMMMMMMMMMMMMMMMMM")
         const diffForSecond = second[4]
         const tag = diffForSecond.e[0][1]
         if (tag && tag.tag === "error_message_0") {
           //meaning ID, Name, or Year of birth didn't match
-          console.log("RESOLVE FALSE")
+          //console.log("RESOLVE FALSE")
           resolve(false)
         }
       }
@@ -141,7 +141,7 @@ export class Validator {
       this.responseposts = []
       return;
     }
-    console.log("Recieved Data:", JSON.stringify(data), "\n")
+    //console.log("Recieved Data:", JSON.stringify(data), "\n")
   }
 
   async getCredentials() {
@@ -155,10 +155,10 @@ export class Validator {
 
     const cookiesArray: string[] = response.headers["set-cookie"]!
     const cookies = cookiesArray.join(" ")
-    console.log("HEADERSAFTER:", cookies)
+    //console.log("HEADERSAFTER:", cookies)
 
     const html = await response.body
-    console.log("BODY:",html)
+    //console.log("BODY:",html)
     const html_elements = HTMLParser.parse(html)
     this.getAndSetCrfToken(html_elements)
     this.getAndSetIdStaticSession(html_elements)
@@ -188,7 +188,7 @@ export class Validator {
   * Only call after begin()
   */
   end() {
-    this.ws?.close()
+    this.ws!.close()
     this.ws?.removeAllListeners()
     this.ws = undefined
   }
@@ -220,7 +220,7 @@ export class Validator {
 
     this.ws!.removeAllListeners()
 
-    console.log("Done removing")
+    //console.log("Done removing")
 
     if (continued) {
       this.stepingWork([], resolve, input)
@@ -230,7 +230,7 @@ export class Validator {
         this.ws!.send(data)
         this.setupRefreshing()
       })
-      console.log("NEW")
+      //console.log("NEW")
     }
 
     this.ws!.on("message", (data) => {
