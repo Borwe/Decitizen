@@ -1,5 +1,7 @@
 import HTMLParser from "node-html-parser"
 import { WebSocket, RawData } from "ws"
+import { Builder } from "selenium-webdriver"
+import Edge from "selenium-webdriver/edge"
 
 type HTMLElement = ReturnType<typeof HTMLParser.parse>
 
@@ -99,7 +101,8 @@ export class Validator {
       //console.log("RESULT Recieved Data:", JSON.stringify(data), "\n")
       if (data[4].response) {
         const diff = data[4].response.diff || undefined
-        if (diff.e) {
+        //console.log("DATA",JSON.stringify(data))
+        if (diff && diff.e) {
           const e = diff.e
           //if `e` exists, then we have an error message inside the current data
           //message
@@ -124,7 +127,7 @@ export class Validator {
       this.responseposts.push(data)
     }
     if (this.stage === "Result" && this.responseposts.length > 1) {
-      const second = this.responseposts[this.responseposts.length -1]
+      const second = this.responseposts[this.responseposts.length - 1]
       //console.log("SECOND:",second)
       if (second[3] === "diff") {
         //console.log("HMMMMMMMMMMMMMMMMMMMMMMMM")
@@ -141,29 +144,27 @@ export class Validator {
       this.responseposts = []
       return;
     }
-    //console.log("Recieved Data:", JSON.stringify(data), "\n")
+    console.log("Recieved Data:", JSON.stringify(data), "\n")
   }
 
   async getCredentials() {
-    const Humanoid = require("humanoid-js")
-    const humanoid = new Humanoid()
-    const response = await humanoid.get(URL_ID_VALIDATION, undefined, {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0"
-      }).catch(() => {
-      throw new Error("Failed to fetch: " + JSON.toString())
-    })
+    let opts = new Edge.Options()
+    opts.addArguments("--headless")
+    opts.addArguments("--disable-gpu")
+    const driver = new Builder().forBrowser(process.env.BROWSER!).setEdgeOptions(opts).build();
+    await driver.get(URL_ID_VALIDATION)
+    let cookies = "_single_signon_key=" +(await driver.manage().getCookie("_single_signon_key")).value
+    console.log("COOKIES", cookies)
+    const text = await driver.getPageSource()
+    //console.log("BODY:", text)
 
-    const cookiesArray: string[] = response.headers["set-cookie"]!
-    const cookies = cookiesArray.join(" ")
-    //console.log("HEADERSAFTER:", cookies)
-
-    const html = await response.body
-    //console.log("BODY:",html)
+    const html = text
     const html_elements = HTMLParser.parse(html)
     this.getAndSetCrfToken(html_elements)
     this.getAndSetIdStaticSession(html_elements)
     this.setupWebSocket(cookies)
 
+    driver.close()
   }
 
   async begin(input: Input): Promise<boolean> {
@@ -194,13 +195,21 @@ export class Validator {
   }
 
   private setupWebSocket(cookies: string) {
-    const websocketURL = this.generateWebSocketURL(this.crf_token!)
+    try {
 
-    this.ws = new WebSocket(websocketURL, {
-      headers: {
-        cookie: cookies
-      },
-    })
+      const websocketURL = this.generateWebSocketURL(this.crf_token!)
+
+      this.ws = new WebSocket(websocketURL, {
+        headers: {
+          cookie: cookies,
+          host: "accounts.ecitizen.go.ke",
+          origin: "https://accounts.ecitizen.go.ke",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0"
+        },
+      })
+    } catch (e) {
+      console.log("ERROORRRR:", JSON.stringify(e))
+    }
   }
 
   private async setupRefreshing() {
@@ -230,10 +239,15 @@ export class Validator {
         this.ws!.send(data)
         this.setupRefreshing()
       })
-      //console.log("NEW")
+      console.log("NEW")
     }
 
+    this.ws!.on("error", (error) => {
+      console.log("GOT ERROR:", error)
+    })
+
     this.ws!.on("message", (data) => {
+      console.log("onmessage:", data.toString())
       this.stepingWork(data, resolve, input)
     })
 

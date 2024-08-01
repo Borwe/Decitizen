@@ -35,7 +35,6 @@ app.post("/", async (req, res)=>{
     reply.message = "User not verified, possibly not registered on ecitizen"
   }
   res.status(200).send(JSON.stringify(reply))
-  validator.end()
 })
 
 app.get("/cdn-cgi/challenge-platform/h/g/orchestrate/chl_page/v1", async (req,res)=>{
@@ -78,6 +77,10 @@ app.get("/debug", async(_, res)=>{
 })
 
 app.listen(PORT, ()=>{
+  if(process.env.ZENROW === undefined){
+    console.log("Failed to get ZENROW from env");
+    process.exit(1)
+  }
   console.log("Started Server")
 })
 
