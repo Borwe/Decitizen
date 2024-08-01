@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from "@jest/globals"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "@jest/globals"
 import dotenv from "dotenv"
 import { Validator } from "../src/core"
 
@@ -78,4 +78,8 @@ describe("core tests",()=>{
     const result = await validator.validate({name, id, year})
     expect(result).toBe(true)
   }, 9999999)  
+
+  afterAll(()=>{
+    validator.end()
+  })
 })

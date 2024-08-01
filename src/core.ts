@@ -144,17 +144,20 @@ export class Validator {
   }
 
   async getCredentials() {
-    const response = await fetch(URL_ID_VALIDATION, {
-      headers: {
+    const Humanoid = require("humanoid-js")
+    const humanoid = new Humanoid()
+    const response = await humanoid.get(URL_ID_VALIDATION, undefined, {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0"
-      },
-    }).catch(_ => {
+      }).catch(() => {
       throw new Error("Failed to fetch: " + JSON.toString())
     })
 
-    const cookies = response.headers.get("Set-Cookie")!
+    const cookiesArray: string[] = response.headers["set-cookie"]!
+    const cookies = cookiesArray.join(" ")
+    console.log("HEADERSAFTER:", cookies)
 
-    const html = await response.text()
+    const html = await response.body
+    console.log("BODY:",html)
     const html_elements = HTMLParser.parse(html)
     this.getAndSetCrfToken(html_elements)
     this.getAndSetIdStaticSession(html_elements)
@@ -184,7 +187,8 @@ export class Validator {
   * Only call after begin()
   */
   end() {
-    this.ws!.close()
+    this.ws?.close()
+    this.ws?.removeAllListeners()
     this.ws = undefined
   }
 
