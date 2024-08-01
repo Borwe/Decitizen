@@ -13,6 +13,8 @@ type Reply = {
   message?: string
 }
 
+const validator = new Validator()
+
 app.post("/", async (req, res)=>{
   let reply: Reply = {
     success: false
@@ -23,9 +25,12 @@ app.post("/", async (req, res)=>{
     res.status(400).send(JSON.stringify(reply))
     return
   }
-  const validator = new Validator(body.name, body.id, body.year)
-  const result = await validator.begin()
-  reply.success = result
+  const result = await validator.validate({
+    id: body.id!,
+    name: body.name!,
+    year: body.year!
+  })
+  reply.success = result as boolean
   if(result === false){
     reply.message = "User not verified, possibly not registered on ecitizen"
   }

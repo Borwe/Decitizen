@@ -124,9 +124,10 @@ export class Validator {
       this.responseposts.push(data)
     }
     if (this.stage === "Result" && this.responseposts.length > 1) {
-      console.log("HMMMMMMMMMMMMMMMMMMMMMMMM")
-      const second = this.responseposts[1]
+      const second = this.responseposts[this.responseposts.length -1]
+      console.log("SECOND:",second)
       if (second[3] === "diff") {
+        console.log("HMMMMMMMMMMMMMMMMMMMMMMMM")
         const diffForSecond = second[4]
         const tag = diffForSecond.e[0][1]
         if (tag && tag.tag === "error_message_0") {
